@@ -73,7 +73,7 @@ const strTime = (dt) => {
 }
 
 
-const socket = io(`http://${appHost}:3000`,{transports: ['websocket', 'polling', 'flashsocket']});
+const socket = io(`http://${appHost}:3001`,{transports: ['websocket', 'polling', 'flashsocket']});
 // const socket = io(`http://9d75c3b4bafa.ngrok.io`,{transports: ['websocket', 'polling', 'flashsocket']});
 
 

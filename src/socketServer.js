@@ -1,0 +1,111 @@
+import rabbitMQService from "./services/rabbitMQService";
+
+const server = require('http').createServer();
+import CONFIG from "./config";
+import rethinkDb from "./db/rethinkDb";
+const { rethinkORM , r } = rethinkDb;
+import _ from 'lodash';
+const io = require('socket.io')(server, {
+  // path: '/test',
+  serveClient: true,
+  // below are engine.IO options
+  pingInterval: 60 * 60 * 1000 * 24,
+  pingTimeout: 60 * 60 * 10,
+  cookie: false,
+  setTimeout: 60 * 60 * 1000 * 24
+});
+const rooms = {};
+io.on("connection", (socket) => {
+  socket.on("join-room", async ({ roomId }) => {
+    try {
+      socket.join(roomId);
+      socket.roomId = roomId;
+      if (rooms[socket.roomId] === null || rooms[socket.roomId] === undefined) {
+        rooms[socket.roomId] = [];
+      }
+      if (rooms[socket.roomId].indexOf(socket.id) === -1) {
+        rooms[socket.roomId].push(socket.id);
+      }
+      console.log({ rooms });
+    } catch (error) {
+      console.log({ task: "socket.io", error });
+    }
+  });
+  socket.on("request-device-info", async ({roomId,deviceId})=>{
+    const type = await r.table("device").filter({deviceId}).orderBy(r.desc('datetime')).limit(1).run((res)=>{
+      return res && res[0] && res[0].type;
+    })
+    let limit = 5;
+    if (type === 'warning') {
+      limit = 10;
+    }
+    const result = await r.table("device").filter({deviceId}).orderBy(r.desc('datetime')).limit(limit).run();
+    io.sockets.in(roomId).emit('response-device-info', result);
+  });
+  socket.on("server-local-device", async ({roomId, type, deviceId, mode, h, t})=>{
+    h = h || null;
+    t = t || null;
+    mode = mode || null;
+    if (roomId && roomId && type && deviceId){
+      const datetime = (new Date()).getTime();
+      // io.sockets.in(data.roomId).emit("server-to-client",data);
+      // io.to(data.roomId).emit("server-to-client",data);
+      console.log(mode, h, t)
+      if (['automatic','remote'].indexOf(type) !== -1){
+        const deviceFound = await r.table("device").filter({deviceId}).run();
+        if (deviceFound.length === 0 ) {
+          r.table("device").insert({
+            datetime,deviceId,mode,h,t,type
+          }).run().catch((rethinkDbError)=>{
+            console.log({rethinkDbError});
+          })
+
+        } else {
+          r.table("device").filter({deviceId}).update({
+            datetime, deviceId,mode,h,t,type
+          }).run().catch((rethinkDbError)=>{
+            console.log({rethinkDbError});
+          })
+        }
+      }
+      if (type === 'warning' && mode !== null) {
+        r.table("device").insert({
+          datetime, deviceId,mode,type
+        }).run().catch((rethinkDbError)=>{
+          console.log({rethinkDbError});
+        })
+      }
+      //io.sockets.in(roomId).emit("update-device-info",{});
+      io.to(roomId).emit("update-device-info",{});
+      const queueData = {
+        type:"device",
+        deviceData:{roomId, type, deviceId, mode, h, t}
+      };
+      rabbitMQService.sender({queueName:'server_local',queueData,mode:'server'});
+    }
+
+  });
+  socket.on("disconnect", function (data) {
+    try {
+      socket.leave(socket.roomId);
+      if (socket.roomId && rooms[socket.roomId]) {
+        console.log({
+          event: 'disconnect',
+          roomId: socket.roomId,
+          client: socket.id
+        });
+        rooms[socket.roomId].splice(rooms[socket.roomId].indexOf(socket.id), 1);
+      }
+
+    } catch (e) {
+      console.log(e);
+    }
+  });
+});
+
+
+server.listen(Number(CONFIG["SOCKET_IO_PORT"]), ()=>{
+  console.log(`Run socketIO server ${CONFIG["SOCKET_IO_HOST"]}:${CONFIG["SOCKET_IO_PORT"]}`)
+});
+
+export default { io };

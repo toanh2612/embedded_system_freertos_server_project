@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('head'); -%>
+
+<body>
+<%- include('header'); -%>
+<main>
+    <div class="container overflow-hidden">
+
+        <div class="room-list row gx-5" id="room-list">
+            <div v-for="room in result" class="col">
+                <div class="p-3 border bg-light">
+<!--                    <a  v-bind:href="'/rooms/' + room.id" class="fs-1">{{room.name}} </a>-->
+                    <p   class="fs-1">{{room.name}} </p>
+                    <hr class="new3">
+                    <div v-for="device in room.devices" class="col">
+                        <div class="row border-bottom">
+                            <div>
+<!--                                <a  v-bind:href="'/devices/' + room.id" class="fs-3">{{device.name}} </a>-->
+                                <p  class="fs-4">{{device.name}} </p><span class="badge bg-info text-dark">{{device.deviceType.name}}</span>
+<!--                                <p>{{device.deviceType.name}}</p>-->
+
+<!--                                <h3>{{device.name}}<span class="badge bg-secondary">{{device.deviceType.name}}</span></h3>-->
+                            </div>
+<!--                            <p>{{device.id}}</p>-->
+                            <div v-if="device.deviceType && device.deviceType.name === 'automatic'">
+                                <div v-bind:id="device.id" name="device">
+                                    <h1 v-bind:id="device.id+'-t'"> °C</h1>
+                                    <h1 v-bind:id="device.id+'-h'"> %</h1>
+                                </div>
+                            </div>
+
+                            <div v-if="device.deviceType && device.deviceType.name==='remote'">
+                                <label class="switch">
+                                    <input v-bind:id="device.id" name="device" type="checkbox" v-bind:onclick="'changeLedStatus(`'+ device.id +'`)'" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div v-if="device.deviceType && device.deviceType.name==='warning'">
+                                <div v-bind:id="device.id" name="device">
+<!--                                    <div class="alert alert-primary" role="alert">-->
+<!--                                        A simple primary alert—check it out!-->
+<!--                                    </div>-->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+    </div>
+
+
+</div>
+
+</main>
+<script src="/js/rooms.js"></script>
+<script type="application/javascript" src="/js/web-push.js"></script>
+<script>
+
+</script>
+</body>
+</html>

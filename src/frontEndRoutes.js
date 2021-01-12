@@ -5,7 +5,7 @@ import deviceRoute from './frontEndRoutes/deviceRoute';
 
 
 const route = Router();
-
+route.use("/", loginRoute);
 route.use("/rooms", roomRoute);
 route.use("/login", loginRoute);
 // route.use("/devices", deviceRoute);

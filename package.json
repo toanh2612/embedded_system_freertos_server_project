@@ -35,7 +35,7 @@
     "redis": "^3.0.2",
     "rethinkdbdash": "^2.3.31",
     "sequelize": "^6.3.5",
-    "socket.io": "^3.0.4",
+    "socket.io": "^2.3.0",
     "thinky": "^2.3.9",
     "uuid": "^8.3.2",
     "web-push": "^3.4.4"

@@ -113,7 +113,7 @@ io.on("connection", (socket) => {
 });
 
 
-server.listen(Number(CONFIG["SOCKET_IO_PORT"]), ()=>{
+server.listen(Number(CONFIG["SOCKET_IO_PORT"]),'0.0.0.0', ()=>{
   console.log(`Run socketIO server ${CONFIG["SOCKET_IO_HOST"]}:${CONFIG["SOCKET_IO_PORT"]}`)
 });
 

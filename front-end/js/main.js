@@ -58,7 +58,7 @@ function getCookie(cname) {
 
 const changeLedStatus = (id) => {
   const el = document.getElementById(id);
-  socket.emit("device-local",{roomId:"s-01",deviceId:id, mode: el.checked ? 1 : 0,"type":"remote"});
+  socket.emit("server-local-device",{roomId:"s-01",deviceId:id, mode: el.checked ? 1 : 0,"type":"remote"});
 }
 
 const strTime = (dt) => {

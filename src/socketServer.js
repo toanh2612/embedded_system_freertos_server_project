@@ -17,7 +17,12 @@ const io = require('socket.io')(server, {
 const rooms = {};
 io.on("connection", (socket) => {
   socket.on("join-room", async ({ roomId }) => {
+
     try {
+      console.log({
+        task:"join-room",
+        roomId
+      });
       socket.join(roomId);
       socket.roomId = roomId;
       if (rooms[socket.roomId] === null || rooms[socket.roomId] === undefined) {
@@ -43,6 +48,10 @@ io.on("connection", (socket) => {
     io.sockets.in(roomId).emit('response-device-info', result);
   });
   socket.on("server-local-device", async ({roomId, type, deviceId, mode, h, t})=>{
+    console.log({
+      task:"server-local-device",
+      data: {roomId, type, deviceId, mode, h, t}
+    });
     h = h || null;
     t = t || null;
     mode = mode || null;

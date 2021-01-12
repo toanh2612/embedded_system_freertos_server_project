@@ -2,14 +2,109 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!--    <script src="/public/js/socket.io.js"></script>-->
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="/js/jquery.js"></script>
+    <link rel="stylesheet" href="/css/bootstrap.css" type="text/css" ><script src="/js/bootstrap.js"></script>
+    <link rel="stylesheet" href="/css/main.css" type="text/css" >
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
     <title>Login</title>
-
 </head>
+
 <body>
-hi
-<!--<script src="/public/js/pong.js"></script>-->
+
+<main>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+                <div class="card card-signin my-5">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Smarthome</h5>
+                        <div class="form-signin">
+                            <div class="form-label-group">
+                                <input type="text" id="username" class="form-control" placeholder="Username" required autofocus>
+
+                            </div>
+
+                            <div class="form-label-group">
+                                <input type="password" id="password" class="form-control" placeholder="Password" required>
+
+                            </div>
+                            <div class="form-label-group" style="text-align: center">
+                                <button  class="btn btn-lg btn-primary btn-block text-uppercase" onclick="login()">Sign in</button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<script>
+
+  function setCookie({cname, cvalue, exdays}) {
+    exdays = exdays || 1;
+    let d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    let expires = "expires="+d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+  }
+
+  function getCookie(cname) {
+    let name = cname + "=";
+    let ca = document.cookie.split(';');
+    for(let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) === ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) === 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return "";
+  }
+
+  setCookie({
+    cname:"token",cvalue:"",exdays:1
+  });
+  const locationHost = location.host;
+  const appHost = locationHost.split(':')[0];
+  const appPort = locationHost.split(':')[1];
+  const endpoint = `http://${appHost}:${appPort}/api`;
+  const loginEndPoint = `${endpoint}/public/login`;
+
+  const login = () =>{
+    return new Promise((resolve, reject)=>{
+      try {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const data = { username, password }
+        $.ajax({
+          url: `${loginEndPoint}`,
+          method: 'post',
+          data,
+          dataType: 'json',
+          success: function (data, status, xhr) {
+            if (data && data.result && data.result.token) {
+              setCookie({
+                cname:"token",cvalue:data.result.token,exdays:1
+              });
+              window.location.href = '/rooms';
+              return resolve(data);
+            } else {
+                return reject(null)
+            }
+
+          }
+        })
+      } catch (error) {
+        return reject(error)
+      }
+    })
+  }
+</script>
 </body>
 </html>

@@ -1,11 +1,25 @@
 const locationHost = location.host;
 const appHost = locationHost.split(':')[0];
-const appPort = '5001';
+const appPort = locationHost.split(':')[1];
 const endpoint = `http://${appHost}:${appPort}/api`;
-const loginEndPoint = `${endpoint}/api/public/login`;
+const loginEndPoint = `${endpoint}/public/login`;
 let datetimeLast =0;
 let roomId = '';
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicGFzc3dvcmQiOiJhZG1pbiIsImlhdCI6MTYxMDA3MzA5Mn0.TcwrY3ArpO4L3abBS_Fv7YTdTa0D55vRX3Wx4Eix3bs'
+
+function setCookie({cname, cvalue, exdays}) {
+  exdays = exdays || 1;
+  let d = new Date();
+  d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+  let expires = "expires="+d.toUTCString();
+  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+// const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicGFzc3dvcmQiOiJhZG1pbiIsImlhdCI6MTYxMDA3MzA5Mn0.TcwrY3ArpO4L3abBS_Fv7YTdTa0D55vRX3Wx4Eix3bs'
+const token = getCookie("token");
+console.log(token);
+if (!token) {
+  window.location.href = '/login';
+}
 const getHomeInfo = () => {
   return new Promise((resolve, reject) =>{
     try {
@@ -19,13 +33,32 @@ const getHomeInfo = () => {
         }
       })
     } catch (e){
+      window.location.href = '/login';
       return reject(e)
     }
   })
 }
+
+
+
+function getCookie(cname) {
+  let name = cname + "=";
+  let ca = document.cookie.split(';');
+  for(let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) === 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
 const changeLedStatus = (id) => {
   const el = document.getElementById(id);
-  socket.emit("server-local-device",{roomId:"s-01",deviceId:id, mode: el.checked ? 1 : 0,"type":"remote"});
+  socket.emit("device-local",{roomId:"s-01",deviceId:id, mode: el.checked ? 1 : 0,"type":"remote"});
 }
 
 const strTime = (dt) => {
@@ -40,15 +73,15 @@ const strTime = (dt) => {
 }
 
 
-const socket = io(`http://${appHost}:3001`,{transports: ['websocket', 'polling', 'flashsocket']});
+const socket = io(`http://${appHost}:3000`,{transports: ['websocket', 'polling', 'flashsocket']});
 // const socket = io(`http://9d75c3b4bafa.ngrok.io`,{transports: ['websocket', 'polling', 'flashsocket']});
 
 
 const updateDeviceInfo = () => {
   const deviceElement = document.getElementsByName("device");
   deviceElement.forEach((dE)=>{
-      socket.emit("request-device-info",{roomId, deviceId: dE.id});
-    })
+    socket.emit("request-device-info",{roomId, deviceId: dE.id});
+  })
 }
 // setTimeout(()=>{
 //   setInterval(()=>{
@@ -66,9 +99,9 @@ socket.on("connect", async () => {
     socket.emit("join-room",{roomId:info["id"]});
 
   }));
-socket.on("update-device-info",()=>{
-  updateDeviceInfo();
-})
+  socket.on("update-device-info",()=>{
+    updateDeviceInfo();
+  })
 
 
   // console.log({
@@ -81,50 +114,50 @@ socket.on("update-device-info",()=>{
   //
   // }))
 
-socket.on ("response-device-info",(data)=>{
-  // console.log({
-  //   task:"response-device-info",
-  //   data
-  // });
-  if (data && data[0] && data[0].type) {
+  socket.on ("response-device-info",(data)=>{
+    // console.log({
+    //   task:"response-device-info",
+    //   data
+    // });
+    if (data && data[0] && data[0].type) {
 
-    if (data[0].type === 'remote' && data[0]) {
-      const element = document.getElementById(data[0].deviceId);
-      element.checked = data[0].mode;
-    }
-    if (data[0].hasOwnProperty('h') && data[0].hasOwnProperty('t') && data[0].type === 'automatic') {
-      const t = document.getElementById(`${data[0].deviceId}-t`);
-      const h = document.getElementById(`${data[0].deviceId}-h`);
-      t.innerText = data[0].t + '°C';
-      h.innerText = data[0].h + '%';
-    }
-    if (data[0].type === 'warning') {
-      const element = document.getElementById(`${data[0].deviceId}`);
-      element.innerHTML = `<div id="${data[0].deviceId}"></div>`;
-      let checkFirstValue = 0;
-      for (let i = 0; i < data.length; i++) {
-        if (data[i].mode) {
+      if (data[0].type === 'remote' && data[0]) {
+        const element = document.getElementById(data[0].deviceId);
+        element.checked = data[0].mode;
+      }
+      if (data[0].hasOwnProperty('h') && data[0].hasOwnProperty('t') && data[0].type === 'automatic') {
+        const t = document.getElementById(`${data[0].deviceId}-t`);
+        const h = document.getElementById(`${data[0].deviceId}-h`);
+        t.innerText = data[0].t + '°C';
+        h.innerText = data[0].h + '%';
+      }
+      if (data[0].type === 'warning') {
+        const element = document.getElementById(`${data[0].deviceId}`);
+        element.innerHTML = `<div id="${data[0].deviceId}"></div>`;
+        let checkFirstValue = 0;
+        for (let i = 0; i < data.length; i++) {
+          if (data[i].mode) {
 
-          //<div role="alert" class="alert alert-primary">
-          //                                         A simple primary alert—check it out!
-          //                                     </div>
-          const div = document.createElement("div");
-          div.classList.add("alert");
-          div.classList.add("alert-primary");
-          const datetime = strTime(data[i].datetime);
-          div.textContent =  `${datetime} Motion was detected`;
-          element.appendChild(div)
-          if (checkFirstValue === 0 && Number(data[i].datetime) > datetimeLast) {
-            datetimeLast = Number(data[i].datetime)
-            pushNotification()
-            console.log('run  pushNotification');
+            //<div role="alert" class="alert alert-primary">
+            //                                         A simple primary alert—check it out!
+            //                                     </div>
+            const div = document.createElement("div");
+            div.classList.add("alert");
+            div.classList.add("alert-primary");
+            const datetime = strTime(data[i].datetime);
+            div.textContent =  `${datetime} Motion was detected`;
+            element.appendChild(div)
+            if (checkFirstValue === 0 && Number(data[i].datetime) > datetimeLast) {
+              datetimeLast = Number(data[i].datetime)
+              pushNotification()
+              console.log('run  pushNotification');
+            }
+            checkFirstValue = 1;
           }
-          checkFirstValue = 1;
         }
       }
     }
-  }
-})
+  })
 });
 
 class Room {
@@ -178,7 +211,7 @@ class Room {
       try {
         $.ajax({
           url: `${this.path}/${this.id}`,
-          method: 'get',
+          method: 'put',
           data,
           dataType: 'json',
           headers: {

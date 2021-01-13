@@ -47,52 +47,67 @@ io.on("connection", (socket) => {
     const result = await r.table("device").filter({deviceId}).orderBy(r.desc('datetime')).limit(limit).run();
     io.sockets.in(roomId).emit('response-device-info', result);
   });
-  socket.on("server-local-device", async ({roomId, type, deviceId, mode, h, t})=>{
-    console.log({
-      task:"server-local-device",
-      data: {roomId, type, deviceId, mode, h, t}
-    });
-    h = h || null;
-    t = t || null;
-    mode = mode || null;
-    if (roomId && roomId && type && deviceId){
-      const datetime = (new Date()).getTime();
-      // io.sockets.in(data.roomId).emit("server-to-client",data);
-      // io.to(data.roomId).emit("server-to-client",data);
-      console.log(mode, h, t)
-      if (['automatic','remote'].indexOf(type) !== -1){
-        const deviceFound = await r.table("device").filter({deviceId}).run();
-        if (deviceFound.length === 0 ) {
+  socket.on("server-local-device", async (param)=>{
+    try {
+      console.log(param);
+      if (param && typeof(param) ==='string') {
+        param = JSON.parse(param);
+      } else if (!param) {
+        return;
+      }
+  
+      let {roomId, type, deviceId, mode, h, t} = param;
+  
+      console.log({
+        task:"server-local-device",
+        data: {roomId, type, deviceId, mode, h, t}
+      });
+      h = h || null;
+      t = t || null;
+      mode = mode || null;
+      if (roomId && roomId && type && deviceId){
+        const datetime = (new Date()).getTime();
+        // io.sockets.in(data.roomId).emit("server-to-client",data);
+        // io.to(data.roomId).emit("server-to-client",data);
+        console.log(mode, h, t)
+        if (['automatic','remote'].indexOf(type) !== -1){
+          const deviceFound = await r.table("device").filter({deviceId}).run();
+          if (deviceFound.length === 0 ) {
+            r.table("device").insert({
+              datetime,deviceId,mode,h,t,type
+            }).run().catch((rethinkDbError)=>{
+              console.log({rethinkDbError});
+            })
+  
+          } else {
+            r.table("device").filter({deviceId}).update({
+              datetime, deviceId,mode,h,t,type
+            }).run().catch((rethinkDbError)=>{
+              console.log({rethinkDbError});
+            })
+          }
+        }
+        if (type === 'warning' && mode !== null) {
           r.table("device").insert({
-            datetime,deviceId,mode,h,t,type
-          }).run().catch((rethinkDbError)=>{
-            console.log({rethinkDbError});
-          })
-
-        } else {
-          r.table("device").filter({deviceId}).update({
-            datetime, deviceId,mode,h,t,type
+            datetime, deviceId,mode,type
           }).run().catch((rethinkDbError)=>{
             console.log({rethinkDbError});
           })
         }
+        //io.sockets.in(roomId).emit("update-device-info",{});
+        io.to(roomId).emit("update-device-info",{});
+        const queueData = {
+          type:"device",
+          deviceData:{roomId, type, deviceId, mode, h, t}
+        };
+        rabbitMQService.sender({queueName:'server_local',queueData,mode:'server'});
       }
-      if (type === 'warning' && mode !== null) {
-        r.table("device").insert({
-          datetime, deviceId,mode,type
-        }).run().catch((rethinkDbError)=>{
-          console.log({rethinkDbError});
-        })
-      }
-      //io.sockets.in(roomId).emit("update-device-info",{});
-      io.to(roomId).emit("update-device-info",{});
-      const queueData = {
-        type:"device",
-        deviceData:{roomId, type, deviceId, mode, h, t}
-      };
-      rabbitMQService.sender({queueName:'server_local',queueData,mode:'server'});
+  
+    }catch(error){
+      console.log({
+        error
+      });
     }
-
   });
   socket.on("disconnect", function (data) {
     try {

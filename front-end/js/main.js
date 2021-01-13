@@ -1,4 +1,4 @@
-const locationHost = location.host;
+const locationHost = '45.32.11.198:5001';
 const appHost = locationHost.split(':')[0];
 const appPort = locationHost.split(':')[1];
 const endpoint = `http://${appHost}:${appPort}/api`;

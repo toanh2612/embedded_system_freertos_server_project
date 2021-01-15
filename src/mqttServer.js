@@ -17,7 +17,7 @@ client.on('connect', function () {
 
 
 
-client.on('message', function (topic, message) {
+client.on('message', async function (topic, message) {
   try {
       // message is Buffer
     message = JSON.parse(message.toString())

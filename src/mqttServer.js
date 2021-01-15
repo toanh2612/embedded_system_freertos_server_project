@@ -5,7 +5,8 @@ const client  = mqtt.connect(CONFIG['MQTT_URL']);
 import _ from 'lodash';
 import rethinkDb from "./db/rethinkDb";
 const {   r } = rethinkDb;
-import { io } from './socketServer';
+import socketServer from './socketServer';
+const { io } = socketServer;
 client.on('connect', function () {
   // dht
   client.subscribe('device', function (err) {

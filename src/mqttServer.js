@@ -55,7 +55,7 @@ client.on('message', async function (topic, message) {
       })
     }
     //io.sockets.in(roomId).emit("update-device-info",{});
-    io.to(data.roomId).emit("update-device-info",{});
+    // io.to(data.roomId).emit("update-device-info",{});
 
   }catch(error) {
     console.log({error});

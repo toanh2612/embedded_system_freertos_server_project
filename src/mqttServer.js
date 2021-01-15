@@ -3,6 +3,8 @@ console.log('run MQTT');
 import CONFIG from './config';
 const client  = mqtt.connect(CONFIG['MQTT_URL']);
 import _ from 'lodash';
+import rethinkDb from "./db/rethinkDb";
+const {   r } = rethinkDb;
 import { io } from './socketServer';
 client.on('connect', function () {
   // dht

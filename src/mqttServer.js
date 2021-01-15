@@ -20,7 +20,7 @@ client.on('message', function (topic, message) {
   try {
       // message is Buffer
     message = JSON.parse(message.toString())
-    console.log(topic,message.toString());
+    console.log(topic,message);
     const data = {..._.pick(message, ['roomId','h','t','mode','type','deviceId'])}
     io.to(data.roomId).emit("server-local-device",data);
 

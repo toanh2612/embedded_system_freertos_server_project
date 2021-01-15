@@ -23,7 +23,7 @@ client.on('message', function (topic, message) {
     message = JSON.parse(message.toString())
     console.log(topic,message);
     const data = {..._.pick(message, ['roomId','h','t','mode','type','deviceId'])}
-    io.to(data.roomId).emit("server-local-device",data);
+    io.emit("server-local-device",data);
 
   }catch(error) {
 

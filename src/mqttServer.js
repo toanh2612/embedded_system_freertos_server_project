@@ -47,7 +47,7 @@ client.on('message', async function (topic, message) {
         })
       }
     }
-    if (data.type === 'warning' && mode !== null) {
+    if (data.type === 'warning' && data && data.mode !== null) {
       r.table("device").insert({
         datetime, ...data
       }).run().catch((rethinkDbError)=>{

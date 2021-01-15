@@ -1,4 +1,5 @@
 const mqtt = require('mqtt')
+console.log('run MQTT');
 import CONFIG from './config';
 const client  = mqtt.connect(CONFIG['MQTT_URL']);
 import _ from 'lodash';

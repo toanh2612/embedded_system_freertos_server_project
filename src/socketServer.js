@@ -105,6 +105,7 @@ io.on("connection", (socket) => {
         // await rabbitMQService.sender({queueName:'local_server',queueData,mode:'local'});
         let topic = (deviceId ==="s-01-7a4e04cf-e449-41aa-b401-8f51aae57d00") ? 'led1' : 'led2'
         try {
+          console.log(topic, mode ? mode.toString() : "0");
           mqttClient.publish(topic, mode ? mode.toString() : "0")
         } catch(errror) {
           console.log({error});

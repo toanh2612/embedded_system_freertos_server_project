@@ -5,6 +5,7 @@ import CONFIG from "./config";
 import rethinkDb from "./db/rethinkDb";
 const { rethinkORM , r } = rethinkDb;
 import _ from 'lodash';
+import mqttClient from './mqttServer';
 const io = require('socket.io')(server, {
   // path: '/test',
   serveClient: true,
@@ -101,6 +102,11 @@ io.on("connection", (socket) => {
           deviceData:{roomId, type, deviceId, mode, h, t}
         };
         rabbitMQService.sender({queueName:'server_local',queueData,mode:'server'});
+        try {
+          mqttClient.publish(deviceId, mode ? mode.toString() : 0)
+        } catch(errror) {
+
+        }
       }
   
     }catch(error){

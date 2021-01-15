@@ -14,6 +14,7 @@ import handleError from "./errors/handleError";
 import auth from "./middlewares/auth";
 import path from "path";
 import cors from 'cors';
+import mqttServer from './mqttServer';
 const { authenticator } = auth;
 
 const webpush = require('web-push');

@@ -59,6 +59,7 @@ function getCookie(cname) {
 const changeLedStatus = (id) => {
   const el = document.getElementById(id);
   socket.emit("server-local-device",{roomId:"s-01",deviceId:id, mode: el.checked ? 1 : 0,"type":"remote"});
+  socket2.emit("server-local-device",{roomId:"s-01",deviceId:id, mode: el.checked ? 1 : 0,"type":"remote"});
 }
 
 const strTime = (dt) => {
@@ -74,6 +75,7 @@ const strTime = (dt) => {
 
 
 const socket = io(`http://${appHost}:3001`,{transports: ['websocket', 'polling', 'flashsocket']});
+const socket2 = io(`http://192.168.43.45:3001`,{transports: ['websocket', 'polling', 'flashsocket']});
 // const socket = io(`http://9d75c3b4bafa.ngrok.io`,{transports: ['websocket', 'polling', 'flashsocket']});
 
 

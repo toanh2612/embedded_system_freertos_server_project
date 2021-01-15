@@ -27,7 +27,7 @@ client.on('message', async function (topic, message) {
     // io.sockets.in(data.roomId).emit("server-to-client",data);
     // io.to(data.roomId).emit("server-to-client",data);
 
-    if (['automatic','remote'].indexOf(type) !== -1){
+    if (['automatic','remote'].indexOf(data.type) !== -1){
       const deviceFound = await r.table("device").filter({deviceId: data.deviceId}).run();
       if (deviceFound.length === 0 ) {
         r.table("device").insert({

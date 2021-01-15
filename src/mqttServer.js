@@ -6,16 +6,11 @@ import _ from 'lodash';
 import { io } from './socketServer';
 client.on('connect', function () {
   // dht
-  client.subscribe('s-01-6a451aef-4d78-49e7-a864-8cceddf2f3fe', function (err) {
+  client.subscribe('device', function (err) {
     if (!err) {
     //   client.publish('test', 'Hello mqtt')
-    }
-  })
-
-  // pir 
-  client.subscribe('s-01-22a810ca-bef3-41cf-9247-3b725a9c926d', function (err) {
-    if (!err) {
-    //   client.publish('test', 'Hello mqtt')
+    } else {
+      console.log(err);
     }
   })
 })

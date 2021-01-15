@@ -23,10 +23,39 @@ client.on('message', function (topic, message) {
     message = JSON.parse(message.toString())
     console.log(topic,message);
     const data = {..._.pick(message, ['roomId','h','t','mode','type','deviceId'])}
-    io.sockets.emit("server-local-device",data);
+    const datetime = (new Date()).getTime();
+    // io.sockets.in(data.roomId).emit("server-to-client",data);
+    // io.to(data.roomId).emit("server-to-client",data);
+
+    if (['automatic','remote'].indexOf(type) !== -1){
+      const deviceFound = await r.table("device").filter({deviceId: data.deviceId}).run();
+      if (deviceFound.length === 0 ) {
+        r.table("device").insert({
+          datetime,...data
+        }).run().catch((rethinkDbError)=>{
+          console.log({rethinkDbError});
+        })
+
+      } else {
+        r.table("device").filter({deviceId: data.deviceId}).update({
+          datetime, ...data
+        }).run().catch((rethinkDbError)=>{
+          console.log({rethinkDbError});
+        })
+      }
+    }
+    if (type === 'warning' && mode !== null) {
+      r.table("device").insert({
+        datetime, ...data
+      }).run().catch((rethinkDbError)=>{
+        console.log({rethinkDbError});
+      })
+    }
+    //io.sockets.in(roomId).emit("update-device-info",{});
+    io.to(data.roomId).emit("update-device-info",{});
 
   }catch(error) {
-
+    console.log({error});
   }
 //   client.end()
 
